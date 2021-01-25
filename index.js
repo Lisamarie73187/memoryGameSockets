@@ -12,45 +12,85 @@ const io = require('socket.io')(server, {
     }
 });
 
+let user = 0;
+
+
 const createUser = (id, name) => {
     return {
         id,
         name,
-        ready: false
+        ready: false,
+        userNum:  user++
     }
 };
 
-const addUser = (userList, user) => {
-    let newList = Object.assign({}, userList)
-    newList[user.name] = user
-    return newList
-}
-
 let connectedUsers = [];
 
+const colors = [
+    '#ecdb54',
+    '#e34132',
+    '#6ca0dc',
+    '#944743',
+    '#dbb2d1',
+    '#ec9787',
+    '#00a68c',
+    '#645394',
+    '#6c4f3d',
+    '#ebe1df',
+    '#bc6ca7',
+    '#bfd833',
+];
 
-var userCount = 0;
-
-
-
+const randomNumber = 6
 io.on("connection", socket => {
-    console.log('connected', userCount++);
+
+    socket.on("disconnecting", (reason) => {
+        connectedUsers = []
+    })
+
+
+    console.log('connected');
     const user = createUser(socket.id);
 
     socket.on('join', (name) => {
-        user.name = name
+        user.name = name;
         connectedUsers.push(user);
         io.emit('users', connectedUsers);
     });
 
-    socket.on('ready', (ready) => {
+    socket.on('ready', () => {
         connectedUsers.forEach((user, index) => {
             if(user.id === socket.id) {
                 connectedUsers[index].ready = true;
             }
         });
         io.emit('users', connectedUsers);
+    });
+
+    socket.on('newGame', (options) => {
+        const newGame = [];
+        for (let i = 0; i < options / 2; i++) {
+            const firstOption = {
+                id: 2 * i,
+                colorId: i,
+                color: colors[i],
+                flipped: false,
+            };
+            const secondOption = {
+                id: 2 * i + 1,
+                colorId: i,
+                color: colors[i],
+                flipped: false,
+            };
+
+            newGame.push(firstOption);
+            newGame.push(secondOption);
+        }
+
+        const shuffledGame = newGame.sort(() => randomNumber);
+        socket.emit('newGame', shuffledGame)
     })
+
 });
 
 const PORT = 8080;
