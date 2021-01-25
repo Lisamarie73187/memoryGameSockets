@@ -41,13 +41,13 @@ const colors = [
     '#bfd833',
 ];
 
-const randomNumber = 6
+const randomNumber = 6;
+
 io.on("connection", socket => {
 
     socket.on("disconnecting", (reason) => {
         connectedUsers = []
-    })
-
+    });
 
     console.log('connected');
     const user = createUser(socket.id);
@@ -89,6 +89,10 @@ io.on("connection", socket => {
 
         const shuffledGame = newGame.sort(() => randomNumber);
         socket.emit('newGame', shuffledGame)
+    });
+
+    socket.on('cardFlipped', (data) => {
+        io.emit('cardFlipped', data);
     })
 
 });
