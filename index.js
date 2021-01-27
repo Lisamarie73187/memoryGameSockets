@@ -12,20 +12,38 @@ const io = require('socket.io')(server, {
     }
 });
 
-let user = 0;
+
+const colors = [
+    '#2276cf',
+    '#7749cf',
+    '#cf6d1e',
+    '#cf2189',
+    '#fcba03',
+    '#3c32cf',
+    '#20cfb5',
+    '#cf6d1e',
+    '#2276cf',
+    '#b7cf25',
+];
 
 
-const createUser = (id, name) => {
-    return {
-        id,
-        name,
+const createUser = (userNum) => {
+   return {
+        id: userNum,
         ready: false,
-        userNum:  user++,
-        turn: false
+        turn: false,
+        points: 0,
+       color: colors[userNum]
     }
 };
 
 let connectedUsers = [];
+
+
+const addUser = (user) => {
+    connectedUsers.push(user)
+};
+
 
 const pictures = [
     'https://images.unsplash.com/photo-1529778873920-4da4926a72c2?ixid=MXwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHw%3D&ixlib=rb-1.2.1&auto=format&fit=crop&w=976&q=80',
@@ -44,52 +62,49 @@ const pictures = [
     'https://images.unsplash.com/photo-1550853024-fae8cd4be47f?ixid=MXwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHw%3D&ixlib=rb-1.2.1&auto=format&fit=crop&w=1107&q=80'
 ];
 
-const randomNumber = .35234523453;
-
-let playerGoesFirst = 0;
+const randomNumber = .41;
 
 
 const shuffle = (array, number) => {
     let currentIndex = array.length, temporaryValue, randomIndex;
 
-    // While there remain elements to shuffle...
     while (0 !== currentIndex) {
 
-        // Pick a remaining element...
         randomIndex = Math.floor(number * currentIndex);
         currentIndex -= 1;
 
-        // And swap it with the current element.
         temporaryValue = array[currentIndex];
         array[currentIndex] = array[randomIndex];
         array[randomIndex] = temporaryValue;
     }
 
     return array;
-}
+};
+
+
+let whoseTurn = 0;
+let userNum = 0;
 
 
 io.on("connection", socket => {
 
     socket.on("disconnecting", (reason) => {
-        connectedUsers = []
+        // connectedUsers = []
     });
 
     console.log('connected');
-    const user = createUser(socket.id);
+    const newUserNum = userNum++;
+    const user = createUser(newUserNum);
+
 
     socket.on('join', (name) => {
         user.name = name;
-        connectedUsers.push(user);
+        addUser(user, name);
         io.emit('users', connectedUsers);
     });
 
     socket.on('ready', () => {
-        connectedUsers.forEach((user, index) => {
-            if(user.id === socket.id) {
-                connectedUsers[index].ready = true;
-            }
-        });
+        user.ready = true;
         io.emit('users', connectedUsers);
     });
 
@@ -101,12 +116,14 @@ io.on("connection", socket => {
                 pictureId: i,
                 picture: pictures[i],
                 flipped: false,
+                user: {}
             };
             const secondOption = {
                 id: 2 * i + 1,
                 pictureId: i,
                 picture: pictures[i],
                 flipped: false,
+                user: {}
             };
 
             newGame.push(firstOption);
@@ -114,11 +131,7 @@ io.on("connection", socket => {
         }
 
         const shuffledGame = shuffle(newGame, randomNumber);
-        connectedUsers.forEach((user, index) => {
-            if(user.id === connectedUsers[0].id) {
-                connectedUsers[index].turn = true;
-            }
-        });
+        connectedUsers[whoseTurn].turn = true;
         io.emit('users', connectedUsers);
         io.emit('newGame', shuffledGame)
     });
@@ -131,14 +144,14 @@ io.on("connection", socket => {
     socket.on('nextPlayer', (indexOfUser) => {
         connectedUsers[indexOfUser].turn = true;
         if(indexOfUser > 0){
-            connectedUsers[indexOfUser -1].turn = false;
+            connectedUsers[indexOfUser - 1].turn = false;
         } else {
             connectedUsers[connectedUsers.length - 1].turn = false;
         }
         io.emit('users', connectedUsers);
-    })
+    });
 
 });
 
-const PORT = 8080;
+const PORT = 8180;
 server.listen(PORT, () => console.log(`Listen on *: ${PORT}`));
