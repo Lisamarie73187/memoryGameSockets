@@ -5,7 +5,7 @@ const server = require("http").Server(app);
 const host = {
     localHost: 'http://localhost:3000',
     hosted: 'http://memory-game-for-you.surge.sh'
-}
+};
 
 
 const io = require('socket.io')(server, {
@@ -77,7 +77,7 @@ const pictures = [
     'https://images.unsplash.com/photo-1582428430472-cc24166253aa?ixlib=rb-1.2.1&ixid=MXwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHw%3D&auto=format&fit=crop&w=1057&q=80'
 ];
 
-const randomNumber = .5;
+const randomNumber = Math.random();
 
 
 const shuffle = (array, number) => {
@@ -166,6 +166,14 @@ io.on("connection", socket => {
         }
         io.emit('users', connectedUsers);
     });
+
+    socket.on('addPoints', (points) => {
+        for(let i = 0; i < connectedUsers.length; i++){
+                connectedUsers[i].points = points[connectedUsers[i].name] ? points[connectedUsers[i].name] : 0
+        }
+        io.emit('users', connectedUsers);
+
+    })
 
 });
 
