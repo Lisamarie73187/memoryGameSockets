@@ -175,6 +175,10 @@ io.on("connection", socket => {
 
     })
 
+    socket.on('startNewGame', () => {
+        removeUser(socket.id)
+    })
+
 });
 
 const PORT = 8180;
