@@ -10,7 +10,7 @@ const host = {
 
 const io = require('socket.io')(server, {
     cors: {
-        origin: host.localHost,
+        origin: host.hosted,
         methods: ["GET", "POST"],
         allowedHeaders: ["my-custom-header"],
         credentials: true
@@ -28,7 +28,7 @@ const randomHexColor = function(){
 
 
 const createUser = (userNum, id) => {
-   return {
+    return {
         userIndex: userNum,
         id,
         ready: false,
@@ -169,7 +169,7 @@ io.on("connection", socket => {
 
     socket.on('addPoints', (points) => {
         for(let i = 0; i < connectedUsers.length; i++){
-                connectedUsers[i].points = points[connectedUsers[i].name] ? points[connectedUsers[i].name] : 0
+            connectedUsers[i].points = points[connectedUsers[i].name] ? points[connectedUsers[i].name] : 0
         }
         io.emit('users', connectedUsers);
 
